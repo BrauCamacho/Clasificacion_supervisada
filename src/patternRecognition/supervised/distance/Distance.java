@@ -11,6 +11,6 @@ package patternRecognition.supervised.distance;
  */
 public interface Distance {
     
-    public float calculate(float[] x1, float[] x2);
+    public float calculate(float[] x1, float[] x2, int q);
     
 }

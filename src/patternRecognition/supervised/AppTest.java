@@ -9,24 +9,20 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.Scanner;
 import patternRecognition.supervised.distance.Bayes;
 import patternRecognition.supervised.distance.KNearestNeighbor;
-import patternRecognition.supervised.distance.Lineal;
 import patternRecognition.supervised.distance.Metric;
 import patternRecognition.supervised.distance.MinumumDistanceClassifier;
 import patternRecognition.supervised.distance.RedNeuronal;
-import patternRecognition.supervised.distance.UnivAprox;
 import patternRecognition.supervised.distance.kfolds;
 
 /**
  *
- * @author AndrésEspinalJiménez
+ * @author brau
  */
 public class AppTest {
 
@@ -34,7 +30,7 @@ public class AppTest {
         String cadena;
         Scanner sc = new Scanner(System.in);
         HashMap<Integer, LinkedList<float[]>> training = new HashMap<>();
-        FileReader f = new FileReader("D:\\irisplant.txt");
+       FileReader f = new FileReader("D:\\irisplant.txt");
       //  FileReader f2 = new FileReader("D:\\balance-scale.data");
        // FileReader f3 = new FileReader("D:\\blood.txt");
          BufferedReader b = new BufferedReader(f);
@@ -60,14 +56,14 @@ public class AppTest {
             
            }
         System.out.println(training.size());
-        System.out.println("Cuantas clases se usaran? ");
+        System.out.println("Cuantas clases se usarán? ");
         int clases = sc.nextInt(); 
         int [] select = new int[clases];
         System.out.println("seleccionar");
         for(int i = 0;i< select.length;i++){
             select[i] = sc.nextInt();
         }
-        System.out.println("Cuantas caracteristicas se uaran? ");
+        System.out.println("Cuantas caracteristicas se usarán? ");
         int Caracteristicas = sc.nextInt();
         int [] select2 = new int[Caracteristicas];
         System.out.println("seleccionar");
@@ -75,6 +71,7 @@ public class AppTest {
             select2[i] = sc.nextInt();
         }
         training = Limitar(training, select, select2);
+        training = remuestreo(training);
         int k = 10;
         int [][] pos = new int[training.size()][k];
         for(int i = 1;i < training.size()+1;i++){
@@ -92,18 +89,20 @@ public class AppTest {
             
         }
         
-        
+        double promediogen = 0;
+        double promediogengen = 0;
+        int[][] desgengen = llenar(clases);
+        int[][] desgengen2 = llenar(clases);
         for(int i =0;i<k;i++){
         kfolds kf = new kfolds(training, pos, i);
         LinkedList<SupervisedClassifier> s = new LinkedList<>();
-        s.add(new Lineal(kf.Ent));
-      //  s.add(new UnivAprox(training, select2.length));
-     //   s.add(new RedNeuronal(kf.Ent, select2.length));
-//       s.add(new Bayes(remuestreo(kf.Ent), select2.length));
-//        s.add(new KNearestNeighbor(remuestreo(kf.Ent), 3, Metric.MANHATTAN, select2.length));
-//        s.add(new KNearestNeighbor(remuestreo(kf.Ent), 3, Metric.EUCLIDIAN, select2.length));
-//        s.add(new MinumumDistanceClassifier(remuestreo(kf.Ent), Metric.MANHATTAN, select2.length));
-//        s.add(new MinumumDistanceClassifier(remuestreo(kf.Ent), Metric.EUCLIDIAN, select2.length));
+       // s.add(new Lineal(kf.Ent));
+       // s.add(new RedNeuronal(kf.Ent, select2.length));
+       s.add(new Bayes(kf.Ent, select2.length));
+        s.add(new KNearestNeighbor(kf.Ent, 3, Metric.MANHATTAN, select2.length));
+        s.add(new KNearestNeighbor(kf.Ent, 3, Metric.EUCLIDIAN, select2.length));
+      //  s.add(new MinumumDistanceClassifier(kf.Ent, Metric.MINKOWSKI, select2.length));
+       // s.add(new MinumumDistanceClassifier(kf.Ent, Metric.EUCLIDIAN, select2.length));
        LinkedList<float[]> ent = new LinkedList<>();
         for(int l = 0;l< kf.getEntrenamiento().size();l++){
            // System.out.println("---");
@@ -113,9 +112,30 @@ public class AppTest {
         }
            
         }
-            System.out.println("Corrida : "+i);
-            Ver(leave(s, clases, ent, kf.getEntrenamiento()));
+            System.out.println("Corrida : "+(i+1));
+            int[][] des = leave(s, clases, ent, kf.getEntrenamiento());
+            Ver(des);
+            promediogengen+= desempenocomp(s);
+            System.out.println("desempeño de experimentacion es : "+desempeno(des));
+           promediogen+=desempeno(leave(s, clases, ent, kf.getEntrenamiento()));
+            int[][] entrenamiento = desempenocomp2(s, clases);
+           for(int desv = 0;desv< desgengen.length;desv++){
+               for(int desv2 = 0;desv2< desgengen[desv].length;desv2++){
+                   desgengen[desv][desv2]+= des[desv][desv];
+                   desgengen2[desv][desv2]+= entrenamiento[desv][desv];
+           }
+           }
     }
+        for(int desv = 0;desv< desgengen.length;desv++){
+               for(int desv2 = 0;desv2< desgengen[desv].length;desv2++){
+                   desgengen[desv][desv2]/=k;
+                   desgengen2[desv][desv2]/=k;
+           }
+           }
+        System.out.println("promedio general de experimentacion = "+(promediogen/(double)k));
+        System.out.println("promedio general de entrenamiento = "+(promediogengen/(double)k));
+        Estatisticos(desgengen, (promediogen/(double)k));
+        Estatisticos(desgengen2, (promediogengen/(double)k));
     }
     public static HashMap Limitar(HashMap<Integer, LinkedList<float[]>> c, int[] selected, int[] selected2){
         HashMap<Integer, LinkedList<float[]>> b = new HashMap<>();
@@ -205,12 +225,82 @@ public class AppTest {
         HashMap<Integer, LinkedList<float[]>> muesestreo2 = new HashMap<>();
         Random r = new Random();
         for(int i = 0;i< muesestreo.size();i++){
+            LinkedList<Integer> indices = new LinkedList<>();
             LinkedList<float[]> tmp = new LinkedList<>();
-            for(int j=0;j< muesestreo.get(i+1).size();j++){
-                tmp.add(muesestreo.get(i+1).get(r.nextInt(muesestreo.get(i+1).size())));
+            indices.add(0);
+            while(indices.size()< muesestreo.get(i+1).size()){
+                int aleatorio = r.nextInt(muesestreo.get(i+1).size());
+                int agreg = 1;
+                for(int chec =0;chec< indices.size();chec++){
+                    if(aleatorio == indices.get(chec)){
+                     agreg = -1;   
+                    }
+                }
+                if(agreg != -1){
+                    indices.add(aleatorio);
+                    //System.out.println(aleatorio);
+                }
+               // System.out.println(indices.size());
+            }
+            for(int ij = 0;ij< indices.size();ij++){
+                tmp.add(muesestreo.get(i+1).get(indices.get(ij)));
             }
             muesestreo2.put(i+1, tmp);
         }
         return muesestreo2;
+    }
+    public static double desempeno(int[][] matrix){
+        int cont = 0;
+        for(int i =0;i<matrix.length;i++){
+            cont+= matrix[i][i];
+        }
+        //System.out.println(cont);
+        int cont2 =0;
+        for(int i =0;i<matrix.length;i++){
+            for(int j =0;j<matrix[i].length;j++){
+            cont2+= matrix[i][j];
+        }
+        }
+        double d = (double)cont/(double)cont2;
+        Estatisticos(matrix, d);
+        return d;
+    }
+    public static double desempenocomp(LinkedList<SupervisedClassifier> conjunto){
+        double desempenocomp =0;
+        System.out.println("matriz de confución de entrenamiento del clasificador");
+        for(int i =0;i< conjunto.size();i++){
+            Ver(conjunto.get(i).desempenototal());
+            System.out.println("El desempeño de entrenamiento del clasificador es:  "+desempeno(conjunto.get(i).desempenototal()));
+            desempenocomp+= desempeno(conjunto.get(i).desempenototal());
+        }
+        return desempenocomp/(double)conjunto.size();
+    }
+    public static double Estatisticos(int[][] d, double media){
+    double suma2 =0;
+    for(int i = 0;i< d.length;i++){
+        
+        suma2+= Math.pow(((double)d[i][i]-media), 2.0);
+        
+    }
+   double resp2 = Math.pow(((1.0/(double)d.length)*suma2),1.0/2.0);
+    System.out.println("Desviación estantar : "+resp2);
+    return resp2;
+}
+    public static int[][] desempenocomp2(LinkedList<SupervisedClassifier> conjunto,int clases){
+        int[][] tmp = llenar(clases);
+        for(int i =0;i< conjunto.size();i++){
+         int [][] des =  conjunto.get(i).desempenototal();
+         for(int desv = 0;desv< tmp.length;desv++){
+               for(int desv2 = 0;desv2< tmp[desv].length;desv2++){
+                   tmp[desv][desv2]+= des[desv][desv];
+           }
+           }
+        }
+        for(int desv = 0;desv< tmp.length;desv++){
+               for(int desv2 = 0;desv2< tmp[desv].length;desv2++){
+                   tmp[desv][desv2]/=conjunto.size();
+           }
+           }
+        return tmp;
     }
 }

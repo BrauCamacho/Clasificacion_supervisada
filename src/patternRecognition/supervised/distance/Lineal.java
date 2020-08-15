@@ -38,9 +38,9 @@ private float t;
                     tmp+=training.get(i+1).get(l)[j];
                 }
                 f[j][i] = tmp/(float) training.get(i+1).size();
-                System.out.printf(" %f ",f[j][i]);
+               // System.out.printf(" %f ",f[j][i]);
             }
-            System.out.println();
+         //   System.out.println();
         }
         return f;
     }
@@ -70,7 +70,7 @@ public static float[] X (float[][] centroides){
      for(int i =0;i< X.length;i++){
          f+= (W[i]*X[i]); 
      }
-     System.out.println(" T "+f);
+    // System.out.println(" T "+f);
      return f;
  }
     @Override
@@ -80,11 +80,40 @@ public static float[] X (float[][] centroides){
             p+= (this.W[i]*x[i]);
         }
         int r =0;
-        if(p+this.t>0){
+        if(p-this.t>0){
         r= 1;    
         }else if(p+this.t<0){
         r=2;    
         }
        return r;
     } 
+    public int[][] desempenototal(){
+        HashMap<Integer, int[]> exp = new HashMap<>();
+        for(int i =0;i< training.size();i++){
+            int[] c = new int[training.get(i+1).size()];
+        for(int j =0;j< training.get(i+1).size();j++){
+            c[j] = classify(training.get(i+1).get(i));
+        }
+        exp.put(i, c);
+        }
+        return generarmatriz(exp);
+    }
+    public static int[][] generarmatriz(HashMap<Integer, int[]> exp){
+        int[][] matrizc = llenar(exp.size());
+        for(int i =0;i< matrizc.length;i++){
+            for(int j =0;j< exp.get(i).length;j++){
+                matrizc[i][exp.get(i)[j]]++;
+            }
+        }
+        return matrizc;
+    }
+    public static int[][] llenar(int entr){
+        int[][] c = new int[entr][entr];
+        for(int i =0;i<c.length;i++){
+            for(int j =0;j<c[i].length;j++){
+                c[i][j] =0;
+        }
+        }
+        return c;
+    }
 }

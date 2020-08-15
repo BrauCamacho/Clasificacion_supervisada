@@ -91,6 +91,7 @@ public class Bayes extends SupervisedClassifier{
         
         varianza(this.medias, this.training.get(i+1), this.varianzas,i);
         }
+        
     }
 
     @Override
@@ -127,5 +128,33 @@ public class Bayes extends SupervisedClassifier{
         }
         return res;
     }
-    
+    public int[][] desempenototal(){
+        HashMap<Integer, int[]> exp = new HashMap<>();
+        for(int i =0;i< training.size();i++){
+            int[] c = new int[training.get(i+1).size()];
+        for(int j =0;j< training.get(i+1).size();j++){
+            c[j] = classify(training.get(i+1).get(i));
+        }
+        exp.put(i, c);
+        }
+        return generarmatriz(exp);
+    }
+    public static int[][] generarmatriz(HashMap<Integer, int[]> exp){
+        int[][] matrizc = llenar(exp.size());
+        for(int i =0;i< matrizc.length;i++){
+            for(int j =0;j< exp.get(i).length;j++){
+                matrizc[i][exp.get(i)[j]-1]++;
+            }
+        }
+        return matrizc;
+    }
+    public static int[][] llenar(int entr){
+        int[][] c = new int[entr][entr];
+        for(int i =0;i<c.length;i++){
+            for(int j =0;j<c[i].length;j++){
+                c[i][j] =0;
+        }
+        }
+        return c;
+    }
 }

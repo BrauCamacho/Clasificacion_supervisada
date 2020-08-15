@@ -25,5 +25,5 @@ public abstract class SupervisedClassifier {
     protected abstract void train();
     
     public abstract int classify(float[] x);
-    
+    public abstract int[][] desempenototal();
 }
